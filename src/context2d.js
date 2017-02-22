@@ -12,17 +12,20 @@ export class RoughContext {
     this.bowing = 1;
     this.hachureAngle = -41;
     this.hachureGap = -1;
+    this._currentPath = [];
+    this._currentPathClosed = true;
 
     // Mirror properties
     const ctxProps = ['fillStyle', 'lineWidth', 'lineCap', 'lineJoin', 'miterLimit', 'strokeStyle', 'lineDashOffset',
-      'font', 'textAlign', 'textBaseline', 'direction', 'shadowBlur', 'shadowColor', 'shadowOffsetX', 'shadowOffsetY'];
+      'font', 'textAlign', 'textBaseline', 'direction', 'shadowBlur', 'shadowColor', 'shadowOffsetX', 'shadowOffsetY',
+      'currentTransform'];
     for (let i = 0; i < ctxProps.length; i++) {
       this._defineRenderProperty(ctxProps[i]);
     }
 
     // Mirror methods
     const ctxMethods = ['clearRect', 'fillText', 'strokeText', 'measureText', 'getLineDash', 'setLineDash',
-      'createLinearGradient', 'createRadialGradient', 'createPattern'];
+      'createLinearGradient', 'createRadialGradient', 'createPattern', 'rotate', 'scale'];
     for (let i = 0; i < ctxMethods.length; i++) {
       this[ctxMethods[i]] = this.ctx[ctxMethods[i]];
     }
@@ -64,7 +67,89 @@ export class RoughContext {
     this._drawLine(left, bottom, left, top);
   }
 
-  // Drawing text
+  // Path
+
+  beginPath() {
+    this._currentPath = [];
+    this._currentPathClosed = false;
+  }
+
+  moveTo(x, y) {
+    this._currentPath.push({
+      command: 'm',
+      data: [x, y],
+      cursor: [x, y]
+    });
+  }
+
+  lineTo(x, y) {
+    this._currentPath.push({
+      command: 'l',
+      data: [x, y],
+      cursor: [x, y]
+    });
+  }
+
+  bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y) {
+    this._currentPath.push({
+      command: 'b',
+      data: [cp1x, cp1y, cp2x, cp2y, x, y],
+      cursor: [x, y]
+    });
+  }
+
+  quadraticCurveTo(cpx, cpy, x, y) {
+    this._currentPath.push({
+      command: 'q',
+      data: [cpx, cpy, x, y],
+      cursor: [x, y]
+    });
+  }
+
+  arc(x, y, radius, startAngle, endAngle, anticlockwise) {
+    this._currentPath.push({
+      command: 'a',
+      data: [x, y, radius, startAngle, endAngle, anticlockwise],
+      cursor: [x, y]
+    });
+    // TODO: update cursor
+  }
+
+  arcTo(x1, y1, x2, y2, radius) {
+    this._currentPath.push({
+      command: 'at',
+      data: [x1, y1, x2, y2, radius],
+      cursor: [x2, y2]
+    });
+    // TODO: update cursor
+  }
+
+  rect(x, y, width, height) {
+    // TODO: 
+  }
+
+  ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle, anticlockwise) {
+    // TODO: 
+  }
+
+  closePath() {
+    if (!this._currentPathClosed) {
+      if (this._currentPath.length > 1) {
+        var p1 = this._currentPath[0].cursor;
+        var p2 = this._currentPath[this._currentPath.length - 1].cursor;
+        if ((Math.round(p1[0]) != Math.round(p2[0])) || (Math.round(p1[1]) != Math.round(p2[1]))) {
+          this.lineTo(p1[0], p2[0]);
+        }
+      }
+    }
+    this._currentPathClosed = true;
+  }
+
+  // Unsuported methods
+
+  drawFocusIfNeeded() {
+    console.error("RoughContext2d does not support the method: drawFocusIfNeeded");
+  }
 
   // Internal methods
 
