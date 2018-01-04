@@ -294,7 +294,7 @@ export class RoughDrawable {
   }
 
   drawLine(ctx, x1, y1, x2, y2, existingPath) {
-    let lengthSq = Math.pow((x1 - x2), 2) + Math.pow((x1 - x2), 2);
+    let lengthSq = Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2);
     let offset = this.maxRandomnessOffset || 0;
     if (offset * offset * 100 > lengthSq) {
       offset = Math.sqrt(lengthSq) / 10;
